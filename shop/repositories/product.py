@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from .. import models, schemas
 from fastapi import HTTPException, status
 
@@ -39,7 +40,10 @@ def get_all_products(db: Session, category_id: int = None, search: str = None):
     if category_id:
         query = query.filter(models.Product.category_id==category_id)
     if search:
-        query = query.filter(models.Product.name.contains(search))
+        query = query.filter(or_(
+                models.Product.name.contains(search),
+                models.Product.description.contains(search)
+            ))
     products = query.all()
     return products
 

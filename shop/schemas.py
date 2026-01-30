@@ -95,3 +95,14 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: str | None = None
+
+class FavoriteProductCreate(BaseModel):
+    product_id: int
+
+class ShowFavoriteProduct(BaseModel):
+    id: int
+    product_id: int
+    created_at: datetime
+    product: ShowProduct
+    class Config():
+        from_attributes=True

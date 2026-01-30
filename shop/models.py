@@ -59,3 +59,13 @@ class OrderItem(Base):
     price=Column(Float)
     order=relationship("Order", back_populates="order_items")
     product=relationship("Product", back_populates="order_items")
+
+class FavoriteProduct(Base):
+    __tablename__='favorite_products'
+    id= Column(Integer, primary_key=True, index=True)
+    user_id=Column(Integer, ForeignKey("users.id"))
+    product_id=Column(Integer, ForeignKey("products.id"))
+    created_at=Column(DateTime, default=datetime.utcnow)
+    
+    user=relationship("User")
+    product=relationship("Product")

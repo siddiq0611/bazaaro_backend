@@ -1,17 +1,6 @@
-from .. import schemas, models
-from ..hashing import Hash
+from .. import models
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-
-def create_user(request: schemas.User, db: Session):
-    existing_user = db.query(models.User).filter(models.User.email==request.email).first()
-    if existing_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    new_user=models.User(name=request.name, email=request.email, password=Hash.bcrypt(request.password))
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
 
 def get_user(id: int, db: Session):
     user=db.query(models.User).filter(models.User.id==id).first()
