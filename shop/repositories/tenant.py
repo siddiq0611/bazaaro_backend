@@ -2,16 +2,23 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from fastapi import HTTPException, status
 
-def create_tenant(request: schemas.Tenant, user_id: int, db: Session):
+def create_tenant(request: schemas.Tenant, db: Session):
     existing_tenant = db.query(models.Tenant).filter(models.Tenant.domain==request.domain).first()
     if existing_tenant:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Domain already exists")
     
-    user_tenant = db.query(models.Tenant).filter(models.Tenant.user_id==user_id).first()
+    user = db.query(models.User).filter(models.User.id == request.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {request.user_id} not found"
+        )
+
+    user_tenant = db.query(models.Tenant).filter(models.Tenant.user_id==request.user_id).first()
     if user_tenant:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already has a tenant")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"User already has a tenant: {user_tenant.brand_name}")
     
-    new_tenant=models.Tenant(brand_name=request.brand_name, domain=request.domain, user_id=user_id)
+    new_tenant=models.Tenant(brand_name=request.brand_name, domain=request.domain, user_id=request.user_id)
     db.add(new_tenant)
     db.commit()
     db.refresh(new_tenant)

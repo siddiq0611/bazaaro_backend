@@ -18,6 +18,7 @@ class ShowUser(BaseModel):
 class Tenant(BaseModel):
     brand_name: str
     domain: str
+    user_id: int
 
 class ShowTenant(BaseModel):
     id: int

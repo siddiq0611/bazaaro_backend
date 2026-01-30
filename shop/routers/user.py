@@ -22,3 +22,16 @@ def get_user(
 ):
     """Get user by ID (admin only)"""
     return user.get_user(id, db)
+
+@router.get(
+    "/",
+    response_model=list[schemas.ShowUser]
+)
+def get_all_users(
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(oauth2.get_admin_user)
+):
+    """
+    Get all users (admin only)
+    """
+    return user.get_all_users(db)

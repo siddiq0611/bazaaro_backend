@@ -12,8 +12,7 @@ get_db=database.get_db
 
 @router.post('', status_code=status.HTTP_201_CREATED, response_model=schemas.ShowTenant)
 def create_tenant(request: schemas.Tenant, db: Session=Depends(get_db), admin: models.User=Depends(oauth2.get_admin_user)):
-    user_id = admin.id
-    return tenant.create_tenant(request, user_id, db)
+    return tenant.create_tenant(request, db)
 
 @router.get('', response_model=List[schemas.ShowTenant])
 def get_all_tenants(db: Session=Depends(get_db), admin: models.User=Depends(oauth2.get_admin_user)):
