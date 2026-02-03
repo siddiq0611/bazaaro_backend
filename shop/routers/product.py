@@ -11,7 +11,7 @@ router = APIRouter(
 get_db=database.get_db
 
 @router.post('/category', status_code=status.HTTP_201_CREATED, response_model=schemas.ShowCategory)
-def create_category(request: schemas.Category, db: Session=Depends(get_db), current_user: models.User=Depends(oauth2.get_current_user)):
+def create_category(request: schemas.Category, db: Session=Depends(get_db), tenant_info: dict=Depends(oauth2.get_tenant_user)):
     return product.create_category(request.name, db)
 
 @router.get('/category', response_model=List[schemas.ShowCategory])
