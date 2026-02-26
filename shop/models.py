@@ -36,6 +36,7 @@ class Product(Base):
     available_quantity=Column(Integer)
     category_id=Column(Integer, ForeignKey("categories.id"))
     tenant_id=Column(Integer, ForeignKey("tenants.id"))
+    is_deleted = Column(Boolean, default=False)
     category=relationship("Category", back_populates="products")
     tenant=relationship("Tenant", back_populates="products")
     order_items = relationship('OrderItem', back_populates="product")

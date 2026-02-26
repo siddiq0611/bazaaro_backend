@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime
+from pydantic import BaseModel, model_validator, field_validator
+from typing import List, Optional, Any
+from datetime import datetime, timezone
+
 
 class User(BaseModel):
     name: str
@@ -13,7 +14,8 @@ class ShowUser(BaseModel):
     email: str
     is_admin: bool
     class Config():
-        from_attributes=True
+        from_attributes = True
+
 
 class Tenant(BaseModel):
     brand_name: str
@@ -26,7 +28,8 @@ class ShowTenant(BaseModel):
     domain: str
     user: ShowUser
     class Config():
-        from_attributes=True
+        from_attributes = True
+
 
 class Category(BaseModel):
     name: str
@@ -35,7 +38,8 @@ class ShowCategory(BaseModel):
     id: int
     name: str
     class Config():
-        from_attributes=True
+        from_attributes = True
+
 
 class Product(BaseModel):
     name: str
@@ -60,7 +64,8 @@ class ShowProduct(BaseModel):
     category: ShowCategory
     tenant: ShowTenant
     class Config():
-        from_attributes=True
+        from_attributes = True
+
 
 class OrderItemCreate(BaseModel):
     product_id: int
@@ -71,8 +76,24 @@ class ShowOrderItem(BaseModel):
     product_id: int
     quantity: int
     price: float
+    product_name: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def pull_product_name(cls, obj: Any) -> Any:
+        if hasattr(obj, "product") and obj.product is not None:
+            return {
+                "id": obj.id,
+                "product_id": obj.product_id,
+                "quantity": obj.quantity,
+                "price": obj.price,
+                "product_name": obj.product.name,
+            }
+        return obj
+
     class Config():
-        from_attributes=True
+        from_attributes = True
+
 
 class OrderCreate(BaseModel):
     order_items: List[OrderItemCreate]
@@ -83,8 +104,17 @@ class ShowOrder(BaseModel):
     total_amount: float
     created_at: datetime
     order_items: List[ShowOrderItem]
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def ensure_utc(cls, v: Any) -> datetime:
+        if isinstance(v, datetime) and v.tzinfo is None:
+            return v.replace(tzinfo=timezone.utc)
+        return v
+
     class Config():
-        from_attributes=True
+        from_attributes = True
+
 
 class Login(BaseModel):
     username: str
@@ -106,4 +136,4 @@ class ShowFavoriteProduct(BaseModel):
     created_at: datetime
     product: ShowProduct
     class Config():
-        from_attributes=True
+        from_attributes = True
