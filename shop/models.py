@@ -37,6 +37,7 @@ class Product(Base):
     category_id=Column(Integer, ForeignKey("categories.id"))
     tenant_id=Column(Integer, ForeignKey("tenants.id"))
     is_deleted = Column(Boolean, default=False)
+    image_url = Column(String, nullable=True)
     category=relationship("Category", back_populates="products")
     tenant=relationship("Tenant", back_populates="products")
     order_items = relationship('OrderItem', back_populates="product")

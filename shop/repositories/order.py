@@ -18,12 +18,9 @@ def create_order(request: schemas.OrderCreate, user_id: int, db: Session):
         if not product:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product with id {item.product_id} not found")
 
-        # Reject if tenant has soft-deleted this product
         if product.is_deleted:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product '{product.name}' is no longer available")
 
-        # Atomic decrement — WHERE checks and decrements in one DB operation
-        # Also guards against is_deleted=True set between the check above and this write
         result = db.execute(
             sql_update(models.Product)
             .where(

@@ -1,12 +1,14 @@
 from pydantic import BaseModel, model_validator, field_validator
 from typing import List, Optional, Any
 from datetime import datetime, timezone
+from fastapi import Form, UploadFile, File
 
 
 class User(BaseModel):
     name: str
     email: str
     password: str
+
 
 class ShowUser(BaseModel):
     id: int
@@ -15,6 +17,14 @@ class ShowUser(BaseModel):
     is_admin: bool
     class Config():
         from_attributes = True
+
+
+class ShowKeycloakUser(BaseModel):
+    id: Optional[str] = None
+    username: Optional[str] = None
+    email: Optional[str] = None
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
 
 
 class Tenant(BaseModel):
@@ -34,6 +44,7 @@ class ShowTenant(BaseModel):
 class Category(BaseModel):
     name: str
 
+
 class ShowCategory(BaseModel):
     id: int
     name: str
@@ -48,12 +59,48 @@ class Product(BaseModel):
     available_quantity: int
     category_id: int
 
+    @classmethod
+    def as_form(
+        cls,
+        name: str               = Form(...),
+        description: str        = Form(""),
+        price: float            = Form(...),
+        available_quantity: int = Form(...),
+        category_id: int        = Form(...),
+    ) -> "Product":
+        return cls(
+            name=name,
+            description=description,
+            price=price,
+            available_quantity=available_quantity,
+            category_id=category_id,
+        )
+
+
 class ProductUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    price: Optional[float] = None
+    name: Optional[str]               = None
+    description: Optional[str]        = None
+    price: Optional[float]            = None
     available_quantity: Optional[int] = None
-    category_id: Optional[int] = None
+    category_id: Optional[int]        = None
+
+    @classmethod
+    def as_form(
+        cls,
+        name: Optional[str]               = Form(None),
+        description: Optional[str]        = Form(None),
+        price: Optional[float]            = Form(None),
+        available_quantity: Optional[int] = Form(None),
+        category_id: Optional[int]        = Form(None),
+    ) -> "ProductUpdate":
+        return cls(
+            name=name,
+            description=description,
+            price=price,
+            available_quantity=available_quantity,
+            category_id=category_id,
+        )
+
 
 class ShowProduct(BaseModel):
     id: int
@@ -61,6 +108,7 @@ class ShowProduct(BaseModel):
     description: str
     price: float
     available_quantity: int
+    image_url: Optional[str] = None    # ← NEW
     category: ShowCategory
     tenant: ShowTenant
     class Config():
@@ -71,12 +119,14 @@ class OrderItemCreate(BaseModel):
     product_id: int
     quantity: int
 
+
 class ShowOrderItem(BaseModel):
     id: int
     product_id: int
     quantity: int
     price: float
     product_name: str = ""
+    image_url: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -88,6 +138,7 @@ class ShowOrderItem(BaseModel):
                 "quantity": obj.quantity,
                 "price": obj.price,
                 "product_name": obj.product.name,
+                "image_url": getattr(obj.product, "image_url", None)
             }
         return obj
 
@@ -97,6 +148,7 @@ class ShowOrderItem(BaseModel):
 
 class OrderCreate(BaseModel):
     order_items: List[OrderItemCreate]
+
 
 class ShowOrder(BaseModel):
     id: int
@@ -120,15 +172,19 @@ class Login(BaseModel):
     username: str
     password: str
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 class TokenData(BaseModel):
     email: str | None = None
 
+
 class FavoriteProductCreate(BaseModel):
     product_id: int
+
 
 class ShowFavoriteProduct(BaseModel):
     id: int

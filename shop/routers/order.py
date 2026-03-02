@@ -17,7 +17,3 @@ def create_order(request: schemas.OrderCreate, db: Session=Depends(get_db), curr
 @router.get('', response_model=List[schemas.ShowOrder])
 def get_my_orders(db: Session=Depends(get_db), current_user: models.User=Depends(oauth2.get_current_user)):
     return order.get_user_orders(current_user.id, db)
-
-# @router.get('/{id}', response_model=schemas.ShowOrder)
-# def get_order(id: int, db: Session=Depends(get_db), current_user: models.User=Depends(oauth2.get_current_user)):
-#     return order.get_order(id, current_user.id, db)
