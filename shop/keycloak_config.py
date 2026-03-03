@@ -1,10 +1,24 @@
-from keycloak import KeycloakOpenID
+from keycloak import KeycloakOpenID, KeycloakAdmin
 from fastapi import HTTPException, status
+
 
 KEYCLOAK_SERVER_URL = "http://localhost:8080"
 KEYCLOAK_REALM = "ecommerce"
 KEYCLOAK_CLIENT_ID = "ecommerce-api"
 KEYCLOAK_CLIENT_SECRET = "053E0EMlhPibProXql0KmOS0hbocBdlV" 
+
+KEYCLOAK_ADMIN_USERNAME = "admin"
+KEYCLOAK_ADMIN_PASSWORD = "admin1@*"  # change if different
+
+keycloak_admin = KeycloakAdmin(
+    server_url=KEYCLOAK_SERVER_URL,
+    username=KEYCLOAK_ADMIN_USERNAME,
+    password=KEYCLOAK_ADMIN_PASSWORD,
+    realm_name=KEYCLOAK_REALM,
+    user_realm_name="master",
+    verify=True
+)
+
 
 keycloak_openid = KeycloakOpenID(
     server_url=KEYCLOAK_SERVER_URL,
@@ -46,3 +60,11 @@ def get_user_roles(token_info: dict) -> list:
 def check_role(roles: list, required_role: str) -> bool:
     """Check if user has required role"""
     return required_role in roles
+
+def user_has_realm_role(user_id: str, required_role: str) -> bool:
+    try:
+        roles = keycloak_admin.get_realm_roles_of_user(user_id)
+        role_names = [role["name"] for role in roles]
+        return required_role in role_names
+    except Exception:
+        return False

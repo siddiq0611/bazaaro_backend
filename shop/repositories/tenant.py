@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from .. import models, schemas
 from fastapi import HTTPException, status
+from ..keycloak_config import user_has_realm_role
 
 def create_tenant(request: schemas.Tenant, db: Session):
     existing_tenant = db.query(models.Tenant).filter(models.Tenant.domain==request.domain).first()
@@ -13,7 +14,12 @@ def create_tenant(request: schemas.Tenant, db: Session):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User with id {request.user_id} not found"
         )
-
+    # 🔍 Check if user has tenant role in Keycloak
+    if not user_has_realm_role(user.keycloak_id, "tenant"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User does not have tenant role in Keycloak"
+        )
     user_tenant = db.query(models.Tenant).filter(models.Tenant.user_id==request.user_id).first()
     if user_tenant:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"User already has a tenant: {user_tenant.brand_name}")
