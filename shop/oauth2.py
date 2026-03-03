@@ -10,7 +10,6 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(database.get_db)
 ):
-    """Get current user from Keycloak token"""
     token = credentials.credentials
     token_info = verify_keycloak_token(token)
 
@@ -61,7 +60,6 @@ def get_tenant_user(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(database.get_db)
 ):
-    """Verify user has tenant role and get tenant info"""
     tenant = db.query(models.Tenant).filter(models.Tenant.user_id == current_user.id).first()
     if not tenant:
         raise HTTPException(

@@ -14,7 +14,7 @@ class ShowUser(BaseModel):
     id: int
     name: str
     email: str
-    
+
     class Config():
         from_attributes = True
 
@@ -108,7 +108,7 @@ class ShowProduct(BaseModel):
     description: str
     price: float
     available_quantity: int
-    image_url: Optional[str] = None    # ← NEW
+    image_url: Optional[str] = None
     category: ShowCategory
     tenant: ShowTenant
     class Config():

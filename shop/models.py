@@ -18,6 +18,8 @@ class Tenant(Base):
     brand_name=Column(String)
     domain=Column(String, unique=True, index=True)
     user_id=Column(Integer, ForeignKey("users.id"))
+
+    is_deleted = Column(Boolean, default=False)
     user=relationship("User")
     products = relationship('Product', back_populates="tenant")
 

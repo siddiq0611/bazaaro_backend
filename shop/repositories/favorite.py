@@ -3,8 +3,6 @@ from .. import models, schemas
 from fastapi import HTTPException, status
 
 def add_favorite(product_id: int, user_id: int, db: Session):
-    """Add product to user's favorites"""
-    
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         raise HTTPException(
@@ -33,8 +31,6 @@ def add_favorite(product_id: int, user_id: int, db: Session):
     return new_favorite
 
 def remove_favorite(product_id: int, user_id: int, db: Session):
-    """Remove product from user's favorites"""
-    
     favorite = db.query(models.FavoriteProduct).filter(
         models.FavoriteProduct.user_id == user_id,
         models.FavoriteProduct.product_id == product_id
@@ -51,8 +47,6 @@ def remove_favorite(product_id: int, user_id: int, db: Session):
     return {"message": "Product removed from favorites"}
 
 def get_user_favorites(user_id: int, db: Session):
-    """Get all favorite products for a user"""
-    
     favorites = db.query(models.FavoriteProduct).filter(
         models.FavoriteProduct.user_id == user_id
     ).all()

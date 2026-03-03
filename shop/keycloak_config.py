@@ -1,14 +1,17 @@
+import os
+from dotenv import load_dotenv
 from keycloak import KeycloakOpenID, KeycloakAdmin
 from fastapi import HTTPException, status
 
+load_dotenv()
 
-KEYCLOAK_SERVER_URL = "http://localhost:8080"
-KEYCLOAK_REALM = "ecommerce"
-KEYCLOAK_CLIENT_ID = "ecommerce-api"
-KEYCLOAK_CLIENT_SECRET = "053E0EMlhPibProXql0KmOS0hbocBdlV" 
+KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
+KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
+KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
 
-KEYCLOAK_ADMIN_USERNAME = "admin"
-KEYCLOAK_ADMIN_PASSWORD = "admin1@*"  # change if different
+KEYCLOAK_ADMIN_USERNAME = os.getenv("KEYCLOAK_ADMIN_USERNAME")
+KEYCLOAK_ADMIN_PASSWORD = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
 
 keycloak_admin = KeycloakAdmin(
     server_url=KEYCLOAK_SERVER_URL,
@@ -19,7 +22,6 @@ keycloak_admin = KeycloakAdmin(
     verify=True
 )
 
-
 keycloak_openid = KeycloakOpenID(
     server_url=KEYCLOAK_SERVER_URL,
     client_id=KEYCLOAK_CLIENT_ID,
@@ -28,7 +30,6 @@ keycloak_openid = KeycloakOpenID(
 )
 
 def verify_keycloak_token(token: str):
-    """Verify and decode Keycloak token"""
     try:
         KEYCLOAK_PUBLIC_KEY = (
             "-----BEGIN PUBLIC KEY-----\n"
@@ -50,7 +51,6 @@ def verify_keycloak_token(token: str):
         )
 
 def get_user_roles(token_info: dict) -> list:
-    """Extract roles from token"""
     try:
         realm_access = token_info.get("realm_access", {})
         return realm_access.get("roles", [])
@@ -58,7 +58,6 @@ def get_user_roles(token_info: dict) -> list:
         return []
 
 def check_role(roles: list, required_role: str) -> bool:
-    """Check if user has required role"""
     return required_role in roles
 
 def user_has_realm_role(user_id: str, required_role: str) -> bool:
