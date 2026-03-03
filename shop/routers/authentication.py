@@ -29,14 +29,13 @@ def login(
             
             # Create user if not found
             if not user:
-                roles = get_user_roles(token_info)
-                is_admin = "admin" in roles
                 
+                keycloak_id = token_info.get("sub")
                 user = models.User(
                     name=token_info.get("name", email.split("@")[0]),
                     email=email,
                     password="keycloak_managed", 
-                    is_admin=is_admin
+                    keycloak_id = keycloak_id
                 )
                 db.add(user)
                 db.commit()

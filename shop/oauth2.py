@@ -12,45 +12,50 @@ def get_current_user(
 ):
     """Get current user from Keycloak token"""
     token = credentials.credentials
-    
     token_info = verify_keycloak_token(token)
-    
+
     email = token_info.get("email")
     if not email:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email not found in token"
         )
-    
+
+    keycloak_id = token_info.get("sub")
+
     user = db.query(models.User).filter(models.User.email == email).first()
-    
+
     if not user:
-        roles = get_user_roles(token_info)
-        is_admin = "admin" in roles
-        
         user = models.User(
             name=token_info.get("name", email.split("@")[0]),
             email=email,
-            password="keycloak_managed", 
-            is_admin=is_admin
+            password="keycloak_managed",
+            keycloak_id=keycloak_id
         )
         db.add(user)
         db.commit()
         db.refresh(user)
-    
-    roles = get_user_roles(token_info)
-    user.is_admin = "admin" in roles
-    
+    else:
+        user.keycloak_id = keycloak_id
+        db.commit()
+
     return user
 
-def get_admin_user(current_user: models.User = Depends(get_current_user)):
-    """Verify user has admin role"""
-    if not current_user.is_admin:
+def get_admin_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
+    token = credentials.credentials
+    token_info = verify_keycloak_token(token)
+
+    roles = get_user_roles(token_info)
+
+    if "admin" not in roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admin users can perform this action"
         )
-    return current_user
+
+    return token_info
 
 def get_tenant_user(
     current_user: models.User = Depends(get_current_user),

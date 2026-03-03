@@ -9,7 +9,7 @@ class User(Base):
     name=Column(String)
     email=Column(String, unique=True, index=True)
     password=Column(String)
-    is_admin=Column(Boolean, default=False)
+    keycloak_id = Column(String, unique=True, index=True)
     orders = relationship('Order', back_populates="user")
 
 class Tenant(Base):
