@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from . import database, models
-from .keycloak_config import verify_keycloak_token, get_user_roles, check_role
+from .keycloak_config import verify_keycloak_token, get_user_roles
 from sqlalchemy.orm import Session
 
 security = HTTPBearer()
