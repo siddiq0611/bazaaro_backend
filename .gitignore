@@ -13,3 +13,6 @@ shop.db
 
 .vscode/
 .idea/
+
+static/
+static/images/
