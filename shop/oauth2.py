@@ -60,7 +60,11 @@ def get_tenant_user(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(database.get_db)
 ):
-    tenant = db.query(models.Tenant).filter(models.Tenant.user_id == current_user.id).first()
+    tenant = db.query(models.Tenant).filter(
+        models.Tenant.user_id == current_user.id,
+        models.Tenant.is_deleted == False
+    ).first()
+
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

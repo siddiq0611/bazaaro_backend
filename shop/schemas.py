@@ -115,6 +115,17 @@ class ShowProduct(BaseModel):
         from_attributes = True
 
 
+class PaginatedProducts(BaseModel):
+    items: List[ShowProduct]
+    total: int       
+    page: int       
+    page_size: int   
+    total_pages: int 
+
+    class Config():
+        from_attributes = True
+
+
 class OrderItemCreate(BaseModel):
     product_id: int
     quantity: int

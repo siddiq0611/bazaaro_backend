@@ -1,3 +1,4 @@
+import math
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
@@ -25,6 +26,24 @@ def _delete_image(image_url: Optional[str]):
     filepath = image_url.lstrip("/")
     if os.path.exists(filepath):
         os.remove(filepath)
+
+
+def _paginate(query, page: int, page_size: int) -> dict:
+    """
+    Helper: execute a query with offset/limit and return a PaginatedProducts-
+    compatible dict.
+    """
+    total = query.count()
+    total_pages = max(1, math.ceil(total / page_size))
+    page = max(1, min(page, total_pages))
+    items = query.offset((page - 1) * page_size).limit(page_size).all()
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
 
 
 def create_category(name: str, db: Session):
@@ -65,7 +84,13 @@ def create_product(request: schemas.Product, image: Optional[UploadFile], tenant
     return new_product
 
 
-def get_all_products(db: Session, category_id: int = None, search: str = None):
+def get_all_products(
+    db: Session,
+    category_id: int = None,
+    search: str = None,
+    page: int = 1,
+    page_size: int = 12,
+):
     query = db.query(models.Product).filter(models.Product.is_deleted == False)
     if category_id:
         query = query.filter(models.Product.category_id == category_id)
@@ -74,7 +99,43 @@ def get_all_products(db: Session, category_id: int = None, search: str = None):
             models.Product.name.contains(search),
             models.Product.description.contains(search)
         ))
-    return query.all()
+    return _paginate(query, page, page_size)
+
+
+def get_products_by_tenant(
+    db: Session,
+    tenant_id: int,
+    category_id: int = None,
+    search: str = None,
+    page: int = 1,
+    page_size: int = 12,
+):
+    query = db.query(models.Product).filter(
+        models.Product.tenant_id == tenant_id,
+        models.Product.is_deleted == False,
+    )
+    if category_id:
+        query = query.filter(models.Product.category_id == category_id)
+    if search:
+        query = query.filter(or_(
+            models.Product.name.contains(search),
+            models.Product.description.contains(search)
+        ))
+    return _paginate(query, page, page_size)
+
+
+def get_product_for_tenant(id: int, tenant_id: int, db: Session):
+    p = db.query(models.Product).filter(
+        models.Product.id == id,
+        models.Product.tenant_id == tenant_id,
+        models.Product.is_deleted == False,
+    ).first()
+    if not p:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with id {id} not found in this store"
+        )
+    return p
 
 
 def get_tenant_products(tenant_id: int, db: Session):

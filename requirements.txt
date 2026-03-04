@@ -6,3 +6,8 @@ python-jose[cryptography]
 python-multipart
 python-keycloak==3.9.1
 requests
+
+
+pytest
+pytest-asyncio
+httpx

@@ -57,9 +57,6 @@ def get_user_roles(token_info: dict) -> list:
     except:
         return []
 
-def check_role(roles: list, required_role: str) -> bool:
-    return required_role in roles
-
 def user_has_realm_role(user_id: str, required_role: str) -> bool:
     try:
         roles = keycloak_admin.get_realm_roles_of_user(user_id)
