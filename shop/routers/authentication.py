@@ -1,11 +1,52 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
+from ..keycloak_config import keycloak_openid, verify_keycloak_token, create_keycloak_user, assign_realm_role
 from .. import schemas, oauth2, database, models
-from ..keycloak_config import keycloak_openid, verify_keycloak_token
 
 router = APIRouter(
     tags=["Authentication"]
 )
+
+@router.post('/signup', response_model=schemas.Token, status_code=201)
+def signup(
+    request: schemas.SignUp,
+    db: Session = Depends(database.get_db)
+):
+    existing = db.query(models.User).filter(models.User.email == request.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    try:
+        full_name = f"{request.first_name} {request.last_name}"
+
+        keycloak_id = create_keycloak_user(
+            username=request.username,
+            email=request.email,
+            first_name=request.first_name,
+            last_name=request.last_name,
+            password=request.password
+        )
+
+        assign_realm_role(keycloak_id, "customer")
+
+        token = keycloak_openid.token(request.username, request.password)
+        access_token = token['access_token']
+
+        new_user = models.User(
+            name=full_name,
+            email=request.email,
+            password="keycloak_managed",
+            keycloak_id=keycloak_id
+        )
+        db.add(new_user)
+        db.commit()
+
+        return {"access_token": access_token, "token_type": "bearer"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Signup failed: {str(e)}")
 
 @router.post('/login', response_model=schemas.Token)
 def login(

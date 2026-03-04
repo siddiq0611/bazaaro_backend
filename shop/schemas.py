@@ -4,8 +4,10 @@ from datetime import datetime, timezone
 from fastapi import Form, UploadFile, File
 
 
-class User(BaseModel):
-    name: str
+class SignUp(BaseModel):
+    first_name: str
+    last_name: str
+    username: str
     email: str
     password: str
 
@@ -17,14 +19,6 @@ class ShowUser(BaseModel):
 
     class Config():
         from_attributes = True
-
-
-class ShowKeycloakUser(BaseModel):
-    id: Optional[str] = None
-    username: Optional[str] = None
-    email: Optional[str] = None
-    firstName: Optional[str] = None
-    lastName: Optional[str] = None
 
 
 class Tenant(BaseModel):
@@ -179,18 +173,9 @@ class ShowOrder(BaseModel):
         from_attributes = True
 
 
-class Login(BaseModel):
-    username: str
-    password: str
-
-
 class Token(BaseModel):
     access_token: str
     token_type: str
-
-
-class TokenData(BaseModel):
-    email: str | None = None
 
 
 class FavoriteProductCreate(BaseModel):

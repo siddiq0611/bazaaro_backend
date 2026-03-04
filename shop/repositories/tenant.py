@@ -1,11 +1,10 @@
 from sqlalchemy.orm import Session
 from .. import models, schemas
 from fastapi import HTTPException, status
-from ..keycloak_config import user_has_realm_role
+from ..keycloak_config import swap_realm_role
 
 
 def create_tenant(request: schemas.Tenant, db: Session):
-
     existing_tenant = db.query(models.Tenant).filter(
         models.Tenant.domain == request.domain
     ).first()
@@ -20,10 +19,10 @@ def create_tenant(request: schemas.Tenant, db: Session):
             detail=f"User with id {request.user_id} not found"
         )
 
-    if not user_has_realm_role(user.keycloak_id, "tenant"):
+    if not user.keycloak_id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User does not have tenant role in Keycloak"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User has no linked Keycloak account"
         )
 
     if existing_tenant and not existing_tenant.is_deleted:
@@ -49,6 +48,9 @@ def create_tenant(request: schemas.Tenant, db: Session):
         existing_tenant.user_id = request.user_id
         db.commit()
         db.refresh(existing_tenant)
+
+        swap_realm_role(user.keycloak_id, remove_role="customer", add_role="tenant")
+
         return existing_tenant
 
     user_tenant = db.query(models.Tenant).filter(
@@ -67,10 +69,11 @@ def create_tenant(request: schemas.Tenant, db: Session):
         domain=request.domain,
         user_id=request.user_id
     )
-
     db.add(new_tenant)
     db.commit()
     db.refresh(new_tenant)
+
+    swap_realm_role(user.keycloak_id, remove_role="customer", add_role="tenant")
 
     return new_tenant
 
@@ -106,6 +109,10 @@ def delete_tenant(id: int, db: Session):
             detail=f"Tenant with id {id} not found"
         )
 
+    user = db.query(models.User).filter(
+        models.User.id == tenant.user_id
+    ).first()
+
     tenant.is_deleted = True
 
     db.query(models.Product).filter(
@@ -114,5 +121,8 @@ def delete_tenant(id: int, db: Session):
     ).update({"is_deleted": True})
 
     db.commit()
+
+    if user and user.keycloak_id:
+        swap_realm_role(user.keycloak_id, remove_role="tenant", add_role="customer")
 
     return {"message": "Tenant and its products soft deleted"}
