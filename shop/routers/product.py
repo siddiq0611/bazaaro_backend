@@ -80,27 +80,6 @@ def get_products_by_domain(
     return product.get_products_by_tenant(db, tenant.id, category_id, search, page, page_size)
 
 
-@router.get('/store/{domain}/{id}', response_model=schemas.ShowProduct)
-def get_product_by_domain(
-    domain: str,
-    id: int,
-    db: Session = Depends(get_db),
-):
-    """Fetch a single product and verify it belongs to the given tenant domain."""
-    tenant = db.query(models.Tenant).filter(
-        models.Tenant.domain == domain,
-        models.Tenant.is_deleted == False
-    ).first()
-
-    if not tenant:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Store '{domain}' not found"
-        )
-
-    return product.get_product_for_tenant(id, tenant.id, db)
-
-
 @router.get('/{id}', response_model=schemas.ShowProduct)
 def get_product(id: int, db: Session = Depends(get_db)):
     return product.get_product(id, db)
