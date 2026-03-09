@@ -1,7 +1,7 @@
-from pydantic import BaseModel, model_validator, field_validator
+from pydantic import BaseModel, Field, ValidationError, model_validator, field_validator
 from typing import List, Optional, Any
 from datetime import datetime, timezone
-from fastapi import Form, UploadFile, File
+from fastapi import Form, HTTPException, UploadFile, File, status
 
 
 class SignUp(BaseModel):
@@ -49,8 +49,8 @@ class ShowCategory(BaseModel):
 class Product(BaseModel):
     name: str
     description: str
-    price: float
-    available_quantity: int
+    price: float = Field(..., gt=0,  description="Price must be greater than 0")
+    available_quantity: int =Field(..., ge=0,  description="Quantity cannot be negative")
     category_id: int
 
     @classmethod
@@ -62,20 +62,26 @@ class Product(BaseModel):
         available_quantity: int = Form(...),
         category_id: int        = Form(...),
     ) -> "Product":
-        return cls(
-            name=name,
-            description=description,
-            price=price,
-            available_quantity=available_quantity,
-            category_id=category_id,
-        )
+        try:
+            return cls(
+                name=name,
+                description=description,
+                price=price,
+                available_quantity=available_quantity,
+                category_id=category_id,
+            )
+        except ValidationError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=e.errors()
+            )
 
 
 class ProductUpdate(BaseModel):
     name: Optional[str]               = None
     description: Optional[str]        = None
-    price: Optional[float]            = None
-    available_quantity: Optional[int] = None
+    price: Optional[float]            = Field(None, gt=0, description="Price must be greater than 0")
+    available_quantity: Optional[int] = Field(None, ge=0, description="Quantity cannot be negative")
     category_id: Optional[int]        = None
 
     @classmethod
@@ -87,13 +93,19 @@ class ProductUpdate(BaseModel):
         available_quantity: Optional[int] = Form(None),
         category_id: Optional[int]        = Form(None),
     ) -> "ProductUpdate":
-        return cls(
-            name=name,
-            description=description,
-            price=price,
-            available_quantity=available_quantity,
-            category_id=category_id,
-        )
+        try:
+            return cls(
+                name=name,
+                description=description,
+                price=price,
+                available_quantity=available_quantity,
+                category_id=category_id,
+            )
+        except ValidationError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=e.errors()
+            )
 
 
 class ShowProduct(BaseModel):

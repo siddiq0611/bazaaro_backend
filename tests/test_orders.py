@@ -14,7 +14,6 @@ WHAT WE'RE TESTING (the most critical logic in the whole app):
 import pytest
 from shop.main import app
 from shop import oauth2, models
-# ADD this instead
 from conftest import override_current_user, override_tenant_user
 
 
