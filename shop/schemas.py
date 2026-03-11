@@ -201,3 +201,24 @@ class ShowFavoriteProduct(BaseModel):
     product: ShowProduct
     class Config():
         from_attributes = True
+
+
+class CartItemUpsert(BaseModel):
+    product_id: int
+    quantity: int
+
+class ShowCartItem(BaseModel):
+    id: int
+    product_id: int
+    quantity: int
+    product: ShowProduct
+
+    class Config():
+        from_attributes = True
+
+class ShowCart(BaseModel):
+    id: int
+    items: List[ShowCartItem]
+
+    class Config():
+        from_attributes = True
