@@ -222,3 +222,20 @@ class ShowCart(BaseModel):
 
     class Config():
         from_attributes = True
+
+
+class TenantRequestCreate(BaseModel):
+    brand_name: str
+    domain: str
+
+
+class ShowTenantRequest(BaseModel):
+    id: int
+    brand_name: str
+    domain: str
+    status: str
+    created_at: datetime
+    user: ShowUser
+
+    class Config():
+        from_attributes = True

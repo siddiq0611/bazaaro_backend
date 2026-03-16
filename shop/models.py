@@ -90,3 +90,13 @@ class CartItem(Base):
     quantity = Column(Integer, default=1)
     cart = relationship("Cart", back_populates="items")
     product = relationship("Product")
+
+class TenantRequest(Base):
+    __tablename__ = 'tenant_requests'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    brand_name = Column(String)
+    domain = Column(String)
+    status = Column(String, default="pending")  # pending / accepted / declined
+    created_at = Column(DateTime, default=datetime.utcnow)
+    user = relationship("User")

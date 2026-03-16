@@ -8,16 +8,17 @@ import os
 
 app = FastAPI()
 
-os.makedirs("static/images", exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+os.makedirs("static/images", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 models.Base.metadata.create_all(engine)
 
